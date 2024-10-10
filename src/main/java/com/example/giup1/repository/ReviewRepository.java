@@ -7,8 +7,9 @@ import java.util.List;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
-    // 특정 유저가 이미 리뷰를 작성했는지 확인
+    // 리뷰 중복 검사
     boolean existsByProductIdAndUserId(Long productId, Long userId);
 
+    // 정렬해서 조회
     List<Review> findByProductIdOrderByCreatedAtDesc(Long productId);
 }

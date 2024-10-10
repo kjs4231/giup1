@@ -1,16 +1,13 @@
 package com.example.giup1.controller;
 
 import com.example.giup1.dto.RequestDto;
-import com.example.giup1.dto.ReviewResponseDto;
-import com.example.giup1.entity.Review;
+import com.example.giup1.dto.ProductResponseDto;
 import com.example.giup1.service.ReviewService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/reviews")
 public class ReviewController {
 
     private final ReviewService reviewService;
@@ -19,18 +16,19 @@ public class ReviewController {
         this.reviewService = reviewService;
     }
 
-    @PostMapping("/{productId}")
+    @PostMapping("/products/{productId}/reviews")
     public ResponseEntity<String> addReview(
             @PathVariable Long productId,
-            @ModelAttribute RequestDto requestDto) {
+            @RequestPart("request") RequestDto requestDto,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
 
-        String resultMessage = reviewService.createReview(productId, requestDto);
+        String resultMessage = reviewService.createReview(productId, requestDto, image);
         return ResponseEntity.ok(resultMessage);
     }
 
-    @GetMapping("/{productId}")
-    public ResponseEntity<ReviewResponseDto> getAllReview(@PathVariable Long productId) {
-        ReviewResponseDto reviewResponse = reviewService.getAllReview(productId);
+    @GetMapping("/products/{productId}/reviews")
+    public ResponseEntity<ProductResponseDto> getAllReview(@PathVariable Long productId) {
+        ProductResponseDto reviewResponse = reviewService.getAllReview(productId);
         return ResponseEntity.ok(reviewResponse);
     }
 

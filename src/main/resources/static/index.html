@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>리뷰 등록 폼</title>
+</head>
+<body>
+<h1>리뷰 등록</h1>
+
+<form id="reviewForm" enctype="multipart/form-data">
+    <label for="userId">사용자 ID:</label><br>
+    <input type="number" id="userId" name="userId" required><br><br>
+
+    <label for="score">점수 (1-5):</label><br>
+    <input type="number" id="score" name="score" min="1" max="5" required><br><br>
+
+    <label for="content">리뷰 내용:</label><br>
+    <textarea id="content" name="content" required></textarea><br><br>
+
+    <label for="image">이미지 업로드 (선택):</label><br>
+    <input type="file" id="image" name="image"><br><br>
+
+    <button type="button" onclick="submitReview()">리뷰 제출</button>
+</form>
+
+<script>
+    function submitReview() {
+        const formData = new FormData();
+        const userId = document.getElementById('userId').value;
+        const score = document.getElementById('score').value;
+        const content = document.getElementById('content').value;
+        const image = document.getElementById('image').files[0];
+
+        // JSON 데이터를 문자열로 변환해서 formData에 추가
+        const requestDto = new Blob([JSON.stringify({
+            userId: userId,
+            score: score,
+            content: content
+        })], { type: "application/json" });
+
+        formData.append("request", requestDto);
+
+        // 이미지 파일이 있다면 formData에 추가
+        if (image) {
+            formData.append("image", image);
+        }
+
+        // 현재 URL의 호스트와 포트를 기반으로 API URL 설정
+        const host = window.location.hostname;  // 현재 호스트 가져오기
+        const port = window.location.port || '8080'; // 현재 포트, 포트가 없으면 기본값 8080 사용
+
+        // API 요청을 위한 URL 설정 (현재 호스트와 포트를 그대로 사용)
+        const apiUrl = `http://${host}:${port}/products/1/reviews`;
+
+        fetch(apiUrl, {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('서버 응답 오류');
+                }
+                return response.text();
+            })
+            .then(data => {
+                alert("리뷰가 성공적으로 등록되었습니다: " + data);
+            })
+            .catch(error => {
+                console.error('에러 발생:', error);
+                alert('리뷰 등록 중 오류가 발생했습니다.');
+            });
+    }
+</script>
+</body>
+</html>
