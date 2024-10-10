@@ -53,6 +53,8 @@ public class ReviewService {
         review.setImageUrl(imageUrl);
         review.setCreatedAt(LocalDateTime.now());
 
+
+        product.addReview(requestDto.getScore());
         reviewRepository.save(review);
 
         return "등록 완료.";

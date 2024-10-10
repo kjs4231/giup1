@@ -49,7 +49,7 @@ public class Review {
 
     public void setProduct(Product product) {
         this.product = product;
-        product.addReview(this.score);
+//        product.addReview(this.score);
     }
 
     public void setUserId(Long userId) {

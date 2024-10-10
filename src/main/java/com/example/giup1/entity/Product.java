@@ -25,16 +25,6 @@ public class Product {
         this.score = ((this.score * (reviewCount - 1)) + newScore) / reviewCount;
     }
 
-    public void removeReview(int reviewScore) {
-        if (this.reviewCount > 0) {
-            this.reviewCount--;
-            if (this.reviewCount == 0) {
-                this.score = 0.0f;
-            } else {
-                this.score = ((this.score * (reviewCount + 1)) - reviewScore) / reviewCount;
-            }
-        }
-    }
 
 
 }
