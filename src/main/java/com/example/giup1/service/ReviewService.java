@@ -12,13 +12,19 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 @Service
 public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final ProductRepository productRepository;
+
+    // ConcurrentHashMap 사용
+    private final ConcurrentMap<Long, List<Review>> reviewCache = new ConcurrentHashMap<>();
 
     public ReviewService(ReviewRepository reviewRepository, ProductRepository productRepository) {
         this.reviewRepository = reviewRepository;
@@ -37,11 +43,7 @@ public class ReviewService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않는 상품입니다."));
 
-//        // 중복 검사. 이제 이건 필요 없음.
-//        if (reviewRepository.existsByProductIdAndUserId(productId, requestDto.getUserId())) {
-//            return "이미 작성했습니다.";
-//        }
-
+        // 이미지 업로드 처리
         String imageUrl = uploadImage(image);
 
         // 엔티티에 저장
@@ -57,14 +59,25 @@ public class ReviewService {
         product.addReview(requestDto.getScore());
         reviewRepository.save(review);
 
-        return "등록 완료.";
+        // ConcurrentHashMap에 리뷰 추가
+        reviewCache.compute(productId, (key, reviews) -> {
+            if (reviews == null) {
+                reviews = new ArrayList<>(); //List.of는 불변이기에 안됨.
+            }
+            reviews.add(review);
+            return reviews;
+        });
+
+
+        return "리뷰 등록 완료";
     }
 
     @Transactional(readOnly = true)
     public ProductResponseDto getAllReview(Long productId) {
+        // ConcurrentHashMap에서 리뷰 리스트 조회
+        List<Review> reviews = reviewCache.computeIfAbsent(productId, id -> reviewRepository.findByProductIdOrderByCreatedAtDesc(id));
 
-        List<Review> reviews = reviewRepository.findByProductIdOrderByCreatedAtDesc(productId);
-
+        // 상품 정보 조회
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않는 상품입니다."));
 
@@ -86,7 +99,7 @@ public class ReviewService {
         return new ProductResponseDto(product.getReviewCount().intValue(), roundedScore, 0, responseDtos);
     }
 
-    //더미 이미지
+    // 더미 이미지
     private String uploadImage(MultipartFile file) {
         if (file != null && !file.isEmpty()) {
             return "/image.png" + file.getOriginalFilename();
