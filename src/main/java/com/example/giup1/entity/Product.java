@@ -25,6 +25,4 @@ public class Product {
         this.score = ((this.score * (reviewCount - 1)) + newScore) / reviewCount;
     }
 
-
-
 }

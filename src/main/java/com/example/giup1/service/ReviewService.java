@@ -37,7 +37,7 @@ public class ReviewService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않는 상품입니다."));
 
-//        // 중복 검사
+//        // 중복 검사. 이제 이건 필요 없음.
 //        if (reviewRepository.existsByProductIdAndUserId(productId, requestDto.getUserId())) {
 //            return "이미 작성했습니다.";
 //        }
@@ -53,7 +53,7 @@ public class ReviewService {
         review.setImageUrl(imageUrl);
         review.setCreatedAt(LocalDateTime.now());
 
-
+        // 리뷰수나 평점계산은 리뷰가 등록될때마다 하는게 더 효율적.
         product.addReview(requestDto.getScore());
         reviewRepository.save(review);
 

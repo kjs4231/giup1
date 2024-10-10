@@ -13,9 +13,10 @@ import java.time.LocalDateTime;
         indexes = {
             @Index(name = "idx_product_createdAt", columnList = "product_id, createdAt"),
             @Index(name = "idx_product_id", columnList = "product_id")
-
         }
 )
+
+
 public class Review {
 
     @Id
