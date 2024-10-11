@@ -7,6 +7,9 @@ import com.example.giup1.entity.Product;
 import com.example.giup1.entity.Review;
 import com.example.giup1.repository.ProductRepository;
 import com.example.giup1.repository.ReviewRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -73,13 +76,29 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
-    public ProductResponseDto getAllReview(Long productId) {
-        // ConcurrentHashMap에서 리뷰 리스트 조회
-        List<Review> reviews = reviewCache.computeIfAbsent(productId, id -> reviewRepository.findByProductIdOrderByCreatedAtDesc(id));
+    public ProductResponseDto getAllReview(Long productId, Long cursor, int size) {
 
         // 상품 정보 조회
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않는 상품입니다."));
+
+        // 페이징 쿼리 처리 (DB에서 커서 기반으로 조회)
+        Pageable pageable = PageRequest.of(0, size, Sort.by("id").descending());
+        List<Review> reviews;
+
+        if (cursor == null || cursor == 0) {
+            // 처음부터 조회하는 경우
+            reviews = reviewRepository.findByProductIdOrderByIdDesc(productId, pageable);
+        } else {
+            // 커서 이후의 리뷰를 조회하는 경우
+            reviews = reviewRepository.findByProductIdAndIdLessThanOrderByIdDesc(productId, cursor, pageable);
+        }
+
+        // 다음 페이지의 커서 값 설정
+        Long nextCursor = reviews.isEmpty() ? null : reviews.get(reviews.size() - 1).getId();
+
+        // 캐시에 저장
+        reviewCache.computeIfAbsent(productId, id -> new ArrayList<>(reviews));
 
         // 이걸 서비스에서 처리하는게 나은지 엔티티에서 한꺼번에 하는게 나은지에 대한 고민...
         // gpt는 조회만 빈번하다면 엔티티에서, 조회와 저장 모두 빈번하다면 서비스에서 처리하는게 더 적합하다고 답변
@@ -96,7 +115,7 @@ public class ReviewService {
                         review.getCreatedAt()
                 )).collect(Collectors.toList());
 
-        return new ProductResponseDto(product.getReviewCount().intValue(), roundedScore, 0, responseDtos);
+        return new ProductResponseDto(product.getReviewCount().intValue(), roundedScore, nextCursor, responseDtos);
     }
 
     // 더미 이미지

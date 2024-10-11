@@ -26,9 +26,14 @@ public class ReviewController {
         return ResponseEntity.ok(resultMessage);
     }
 
+
     @GetMapping("/products/{productId}/reviews")
-    public ResponseEntity<ProductResponseDto> getAllReview(@PathVariable Long productId) {
-        ProductResponseDto reviewResponse = reviewService.getAllReview(productId);
+    public ResponseEntity<ProductResponseDto> getAllReview(
+            @PathVariable Long productId,
+            @RequestParam(value = "cursor", required = false) Long cursor,
+            @RequestParam(value = "size", defaultValue = "3") int size) {
+
+        ProductResponseDto reviewResponse = reviewService.getAllReview(productId, cursor, size);
         return ResponseEntity.ok(reviewResponse);
     }
 
