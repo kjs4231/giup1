@@ -82,7 +82,7 @@ public class ReviewService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않는 상품입니다."));
 
-        // 페이징 쿼리 처리 (DB에서 커서 기반으로 조회)
+        // 페이징 쿼리 처리. 이전에 안됐던 이유는 캐시와 db조회가 충돌났기 때문...
         Pageable pageable = PageRequest.of(0, size, Sort.by("id").descending());
         List<Review> reviews;
 
